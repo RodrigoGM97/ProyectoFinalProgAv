@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "sockets.h"
 #define MAX_QUEUE 5
 #define BUFFER_SIZE 200
 using namespace std;
@@ -21,6 +20,5 @@ typedef struct data_struct {
 
 } thread_data_t;
 
-void waitForConnections(int server_fd);
 
 #endif //PROYECTOFINALPROGAV_CHAT_H
