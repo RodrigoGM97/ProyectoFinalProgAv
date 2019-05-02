@@ -1,8 +1,8 @@
-#include <iostream>
+#include "chat.h"
 
-using namespace std;
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
+    print();
     return 0;
 }
