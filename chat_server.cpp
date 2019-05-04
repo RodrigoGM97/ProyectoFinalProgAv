@@ -8,7 +8,6 @@
 int interrupt_exit = 0;
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
     printLocalIPs();
     int server = initServer(const_cast<char *>("8989"), MAX_QUEUE);
     //std::cout << server << std::endl;
@@ -69,7 +68,8 @@ void waitForConnections(int server_fd)
                 // Get the data from the client
                 inet_ntop(client_address.sin_family, &client_address.sin_addr, client_presentation, sizeof client_presentation);
                 printf("Received incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
-
+                connection_data = new thread_data_t;
+                connection_data->connection_fd = client_fd;
                 // CREATE A THREAD
                 if (pthread_create(&new_tid, NULL, attentionThread, connection_data) == 0)
                     printf("Thread created\n");
@@ -80,6 +80,36 @@ void waitForConnections(int server_fd)
 
 void* attentionThread(void* arg)
 {
-    cout << "In attention thread" << endl;
-    return 0;
+    int poll_response;
+    int timeout = 500;
+    thread_data_t* data = (thread_data_t*)arg;
+    char buffer[BUFFER_SIZE];
+
+    while (!interrupt_exit)
+    {
+        // Create a structure array to hold the file descriptors to poll
+        struct pollfd test_fds[1];
+        // Fill in the structure
+        test_fds[0].fd = data->connection_fd;
+        test_fds[0].events = POLLIN;    // Check for incomming data
+        poll_response = poll(test_fds, 1, timeout);
+
+        if (poll_response == -1)
+        {
+            if (errno == EINTR)
+            {
+                break;
+            }
+        }
+        // Receive the request
+        else if (poll_response > 0)
+        {
+            if (recvString(data->connection_fd, buffer, BUFFER_SIZE) == 0)
+            {
+                cout << "Client disconnected" << endl;
+                break;
+            }
+        }
+    }
+    pthread_exit(NULL);
 }
