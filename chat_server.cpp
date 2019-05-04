@@ -26,7 +26,6 @@ void waitForConnections(int server_fd)
     thread_data_t * connection_data = NULL;
     int poll_response;
     int timeout = 500;		// Time in milliseconds (0.5 seconds)
-    int transactions = 0;
 
     // Get the size of the structure to store client information
     client_address_size = sizeof client_address;
@@ -82,4 +81,5 @@ void waitForConnections(int server_fd)
 void* attentionThread(void* arg)
 {
     cout << "In attention thread" << endl;
+    return 0;
 }
