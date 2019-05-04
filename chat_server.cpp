@@ -6,6 +6,7 @@
 
 
 int interrupt_exit = 0;
+map<string, int>connected_users;
 
 int main() {
     printLocalIPs();
@@ -82,8 +83,12 @@ void* attentionThread(void* arg)
 {
     int poll_response;
     int timeout = 500;
-    thread_data_t* data = (thread_data_t*)arg;
+    auto * data = (thread_data_t*)arg;
     char buffer[BUFFER_SIZE];
+    recvString(data->connection_fd, buffer, BUFFER_SIZE);
+    data->client_id = buffer;
+    connected_users.insert(pair<string, int>(buffer, data->connection_fd));
+
 
     while (!interrupt_exit)
     {
@@ -107,8 +112,12 @@ void* attentionThread(void* arg)
             if (recvString(data->connection_fd, buffer, BUFFER_SIZE) == 0)
             {
                 cout << "Client disconnected" << endl;
+                connected_users.erase(data->client_id);
                 break;
             }
+            std::map<string,int>::iterator it;
+            for (it=connected_users.begin(); it!=connected_users.end(); ++it)
+                std::cout << it->first << " => " << it->second << '\n';
         }
     }
     pthread_exit(NULL);

@@ -11,6 +11,8 @@
 #include <arpa/inet.h>
 #include <poll.h>
 #include <pthread.h>
+#include <string>
+#include <map>
 #include "sockets.h"
 #define MAX_QUEUE 5
 #define BUFFER_SIZE 200
@@ -20,6 +22,7 @@ using namespace std;
 typedef struct data_struct {
     // The file descriptor for the socket
     int connection_fd;
+    string client_id;
 
 } thread_data_t;
 
