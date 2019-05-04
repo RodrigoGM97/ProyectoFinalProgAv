@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <poll.h>
+#include <pthread.h>
 #include "sockets.h"
 #define MAX_QUEUE 5
 #define BUFFER_SIZE 200
@@ -23,6 +24,8 @@ typedef struct data_struct {
 } thread_data_t;
 
 void waitForConnections(int server_fd);
+
+void* attentionThread(void* arg);
 
 
 
