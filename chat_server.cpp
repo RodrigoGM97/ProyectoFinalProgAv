@@ -115,9 +115,22 @@ void* attentionThread(void* arg)
                 connected_users.erase(data->client_id);
                 break;
             }
-            std::map<string,int>::iterator it;
-            for (it=connected_users.begin(); it!=connected_users.end(); ++it)
-                std::cout << it->first << " => " << it->second << '\n';
+            message_t msg;
+            //sscanf(buffer, "%d %s %s", &msg.account_from, &msg.account_to, &msg.message);
+            //sscanf(buffer, "%s", &msg.message);
+            cout << "Message received" << endl;
+            if (buffer[0] == '1')
+            {
+                char* pbuffer;
+                pbuffer = &(buffer[1]);
+                cout << "Account to:" << pbuffer << endl;
+            }
+            else if (buffer[0] == '2')
+            {
+                //cout << "Message: " << buffer << endl;
+            }
+            //cout << msg.account_to.c_str() << endl;
+
         }
     }
     pthread_exit(NULL);

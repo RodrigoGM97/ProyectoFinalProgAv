@@ -26,6 +26,13 @@ typedef struct data_struct {
 
 } thread_data_t;
 
+typedef struct message_struct {
+    int account_from;
+    string account_to;
+    string message;
+
+} message_t;
+
 void waitForConnections(int server_fd);
 
 void* attentionThread(void* arg);
