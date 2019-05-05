@@ -88,7 +88,7 @@ void* attentionThread(void* arg)
     recvString(data->connection_fd, buffer, BUFFER_SIZE);
     data->client_id = buffer;
     connected_users.insert(pair<string, int>(buffer, data->connection_fd));
-
+    message_t msg;
 
     while (!interrupt_exit)
     {
@@ -109,28 +109,24 @@ void* attentionThread(void* arg)
         // Receive the request
         else if (poll_response > 0)
         {
-            if (recvString(data->connection_fd, buffer, BUFFER_SIZE) == 0)
+            if (recvString(data->connection_fd, &msg, sizeof(message_t)) == 0)
             {
                 cout << "Client disconnected" << endl;
                 connected_users.erase(data->client_id);
                 break;
             }
-            message_t msg;
-            //sscanf(buffer, "%d %s %s", &msg.account_from, &msg.account_to, &msg.message);
-            //sscanf(buffer, "%s", &msg.message);
-            cout << "Message received" << endl;
-            if (buffer[0] == '1')
-            {
-                char* pbuffer;
-                pbuffer = &(buffer[1]);
-                cout << "Account to:" << pbuffer << endl;
-            }
-            else if (buffer[0] == '2')
-            {
-                //cout << "Message: " << buffer << endl;
-            }
-            //cout << msg.account_to.c_str() << endl;
+            //sleep(10);
+            cout << "Account from: "<< msg.account_from << endl;
+            cout << "Account to: "<< msg.account_to << endl;
+            cout << "Mensaje: "<< msg.message << endl;
 
+            /*map<string, int>::iterator it;
+            for (it = connected_users.begin(); it != connected_users.end(); it++)
+            {
+                std::cout << it->first << ' ' << it->second << '\n';
+            }*/
+
+            sendString(connected_users.find(msg.account_to)->second, &msg,sizeof(message_t));
         }
     }
     pthread_exit(NULL);

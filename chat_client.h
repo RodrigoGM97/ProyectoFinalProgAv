@@ -20,9 +20,9 @@
 using namespace std;
 
 typedef struct message_struct {
-    int account_from;
-    string account_to;
-    string message;
+    char account_from[BUFFER_SIZE];
+    char account_to[BUFFER_SIZE];
+    char message[BUFFER_SIZE];
 
 } message_t;
 

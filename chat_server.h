@@ -14,6 +14,7 @@
 #include <string>
 #include <map>
 #include "sockets.h"
+#include "fatal_error.h"
 #define MAX_QUEUE 5
 #define BUFFER_SIZE 200
 using namespace std;
@@ -27,9 +28,9 @@ typedef struct data_struct {
 } thread_data_t;
 
 typedef struct message_struct {
-    int account_from;
-    string account_to;
-    string message;
+    char account_from[BUFFER_SIZE];
+    char account_to[BUFFER_SIZE];
+    char message[BUFFER_SIZE];
 
 } message_t;
 
