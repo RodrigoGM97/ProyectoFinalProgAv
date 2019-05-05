@@ -125,8 +125,8 @@ void* attentionThread(void* arg)
             {
                 std::cout << it->first << ' ' << it->second << '\n';
             }*/
-
-            sendString(connected_users.find(msg.account_to)->second, &msg,sizeof(message_t));
+            if (connected_users.find(msg.account_to)->second != 0)
+                sendString(connected_users.find(msg.account_to)->second, &msg,sizeof(message_t));
         }
     }
     pthread_exit(NULL);
