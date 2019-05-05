@@ -115,7 +115,7 @@ void* attentionThread(void* arg)
                 connected_users.erase(data->client_id);
                 break;
             }
-            //sleep(10);
+
             cout << "Account from: "<< msg.account_from << endl;
             cout << "Account to: "<< msg.account_to << endl;
             cout << "Mensaje: "<< msg.message << endl;

@@ -12,7 +12,7 @@
 #include <arpa/inet.h>
 #include <poll.h>
 #include <string>
-
+#include <pthread.h>
 // Custom libraries
 #include "sockets.h"
 #include "fatal_error.h"
@@ -25,5 +25,15 @@ typedef struct message_struct {
     char message[BUFFER_SIZE];
 
 } message_t;
+
+// Data that will be sent to each structure
+typedef struct data_struct {
+    // The file descriptor for the socket
+    int connection_fd;
+    char client_id[BUFFER_SIZE];
+
+} thread_data_t;
+
+void* client_write(void* arg);
 
 #endif //PROYECTOFINALPROGAV_CHAT_CLIENT_H

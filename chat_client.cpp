@@ -20,9 +20,15 @@ int main(int argc, char * argv[])
     strcpy(buffer, num_cliente);
     cout << buffer << " connected to server" << endl;
     sendString(connection_fd, buffer, BUFFER_SIZE);
-    message_t msg;
     message_t income_msg;
-    strcpy(msg.account_from, buffer);
+
+    pthread_t new_tid;
+    thread_data_t * connection_data = NULL;
+    connection_data = new thread_data_t;
+    strcpy(connection_data->client_id, buffer);
+    connection_data->connection_fd = connection_fd;
+    if (pthread_create(&new_tid, NULL, client_write, connection_data) == 0)
+        printf("Thread created\n");
 
     while (!interrupt_exit)
     {
@@ -42,12 +48,11 @@ int main(int argc, char * argv[])
         }
         if (poll_response==0)
         {
-            strcpy(msg.account_to, "Juan");
+            /*strcpy(msg.account_to, "Juan");
             strcpy(msg.message, "Hola");
             int send_m = 0;
-            cin >> send_m;
-            if (send_m == 1)
-                sendString(connection_fd, &msg, sizeof(message_t));
+
+            sendString(connection_fd, &msg, sizeof(message_t));*/
             /*sprintf(buffer, "%s", msg.account_to.c_str());
             sendString(connection_fd, buffer, BUFFER_SIZE);*/
 
@@ -69,4 +74,32 @@ int main(int argc, char * argv[])
     close(connection_fd);
 
     return 0;
+}
+
+void* client_write(void* arg)
+{
+    auto * data = (thread_data_t*)arg;
+    char new_msg[BUFFER_SIZE];
+    char msg_dest[BUFFER_SIZE];
+    message_t msg;
+    strcpy(msg.account_from, data->client_id);
+
+    while(!interrupt_exit)
+    {
+        cout << "Enter destination: " << endl;
+        cin.ignore();
+        cin.getline(msg_dest, sizeof(msg_dest));
+
+        cout << "Enter msg: " << endl;
+        cin.getline(new_msg, sizeof(new_msg));
+
+        strcpy(msg.account_to, msg_dest);
+        strcpy(msg.message, new_msg);
+        /*cout << "Len: " << sizeof(new_msg) << endl;
+        cout << "MSG: " << new_msg<< endl;
+        cout << "Stored: " << msg.message << endl;*/
+        sendString(data->connection_fd, &msg, sizeof(message_t));
+    }
+
+    pthread_exit(NULL);
 }
