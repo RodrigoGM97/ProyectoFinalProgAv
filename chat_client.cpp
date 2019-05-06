@@ -15,7 +15,7 @@ int main(int argc, char * argv[])
     int timeout = 500;
 
     connection_fd = connectSocket(argv[1], argv[2]);
-    cout << "Ingrese su número de cliente" << endl;
+    cout << "Ingrese su correo" << endl;
     cin >> num_cliente;
     strcpy(buffer, num_cliente);
     cout << buffer << " connected to server" << endl;
