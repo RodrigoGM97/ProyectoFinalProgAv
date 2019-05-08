@@ -50,10 +50,6 @@ void waitForConnections(int server_fd)
         //Check for interruptions
         if (poll_response == 0)
         {
-            if (read_stored_message() == 1)
-            {
-                cout << "User has now logged in, sending message" << endl;
-            }
             if (interrupt_exit)
                 break;
         }
@@ -75,6 +71,7 @@ void waitForConnections(int server_fd)
                 printf("Received incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
                 connection_data = new thread_data_t;
                 connection_data->connection_fd = client_fd;
+
                 // CREATE A THREAD
                 if (pthread_create(&new_tid, NULL, attentionThread, connection_data) == 0)
                     printf("Thread created\n");
@@ -92,6 +89,21 @@ void* attentionThread(void* arg)
     recvString(data->connection_fd, buffer, BUFFER_SIZE);
     data->client_id = buffer;
     connected_users.insert(pair<string, int>(buffer, data->connection_fd));
+    pair<message_t, int> now_connected_data;
+    now_connected_data = read_stored_message(buffer);
+    cout << now_connected_data.second << endl;
+    while (now_connected_data.second == 1)
+    {
+        cout << "User has now logged in, sending message" << endl;
+        cout << now_connected_data.first.message << endl;
+        sendString(connected_users.find(now_connected_data.first.account_to)->second, &now_connected_data.first,sizeof(message_t));
+        now_connected_data = read_stored_message(buffer);
+    }
+    /*if (now_connected_data.second == 1)
+    {
+        cout << "User has now logged in, sending message" << endl;
+        cout << now_connected_data.first.message << endl;
+    }*/
     message_t msg;
 
     while (!interrupt_exit)
@@ -166,26 +178,32 @@ void write_store_message(message_t msg, string filename)
     temporal_msg_file.close();
 }
 
-int read_stored_message()
+pair<message_t, int> read_stored_message(char connected_client[])
 {
     message_t message;
     string filename = "temporal_msg_file";
     FILE * file = NULL;
     file = fopen(filename.c_str(), "r");
+    pair<message_t, int> return_val;
 
     while (fscanf(file, "%s\t%s\n", message.account_from, message.account_to) != EOF)
     {
         fgets(message.message, BUFFER_SIZE, file);
         //printf("%s\t%s\n%s\n", message1, message2, message3);
-        if(strncmp(message.account_to, "asdf", BUFFER_SIZE) == 0) {
+
+
+        if(strncmp(message.account_to, connected_client, BUFFER_SIZE) == 0) {
             delete_msg_from_file(message);
-            return 1;
+            return_val.first = message;
+            return_val.second = 1;
+            return return_val;
             break;
         }
     }
-
+    return_val.first = message;
+    return_val.second = 0;
     fclose(file);
-    return 0;
+    return return_val;
 }
 
 void delete_msg_from_file(message_t msg_to_delete)
@@ -212,8 +230,7 @@ void delete_msg_from_file(message_t msg_to_delete)
             write_store_message(message, filename_temp);
         }
     }
-    int result;
-    result = rename(filename_temp.c_str(), filename.c_str());
+    rename(filename_temp.c_str(), filename.c_str());
 
     fclose(file);
 }

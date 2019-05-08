@@ -42,7 +42,7 @@ void* attentionThread(void* arg);
 
 void write_store_message(message_t msg, string filename);
 
-int read_stored_message();
+pair<message_t, int> read_stored_message(char connected_client[]);
 
 void delete_msg_from_file(message_t msg_to_delete);
 
