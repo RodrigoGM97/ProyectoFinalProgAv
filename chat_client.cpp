@@ -83,11 +83,12 @@ void* client_write(void* arg)
     char msg_dest[BUFFER_SIZE];
     message_t msg;
     strcpy(msg.account_from, data->client_id);
+    cin.ignore();
 
     while(!interrupt_exit)
     {
         cout << "Enter destination: " << endl;
-        cin.ignore();
+        //cin.ignore();
         cin.getline(msg_dest, sizeof(msg_dest));
 
         cout << "Enter msg: " << endl;

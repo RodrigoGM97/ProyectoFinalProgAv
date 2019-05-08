@@ -50,6 +50,10 @@ void waitForConnections(int server_fd)
         //Check for interruptions
         if (poll_response == 0)
         {
+            if (read_stored_message() == 1)
+            {
+                cout << "User has now logged in, sending message" << endl;
+            }
             if (interrupt_exit)
                 break;
         }
@@ -106,6 +110,10 @@ void* attentionThread(void* arg)
                 break;
             }
         }
+        /*else if (poll_response == 0)
+        {
+            cout << "." << endl;
+        }*/
         // Receive the request
         else if (poll_response > 0)
         {
@@ -116,9 +124,9 @@ void* attentionThread(void* arg)
                 break;
             }
 
-            cout << "Account from: "<< msg.account_from << endl;
+            /*cout << "Account from: "<< msg.account_from << endl;
             cout << "Account to: "<< msg.account_to << endl;
-            cout << "Mensaje: "<< msg.message << endl;
+            cout << "Mensaje: "<< msg.message << endl;*/
 
             /*map<string, int>::iterator it;
             for (it = connected_users.begin(); it != connected_users.end(); it++)
@@ -127,7 +135,85 @@ void* attentionThread(void* arg)
             }*/
             if (connected_users.find(msg.account_to)->second != 0)
                 sendString(connected_users.find(msg.account_to)->second, &msg,sizeof(message_t));
+            else if (connected_users.find(msg.account_to)->second == 0)
+            {
+                write_store_message(msg, "temporal_msg_file");
+            }
+
         }
     }
     pthread_exit(NULL);
+}
+
+void write_store_message(message_t msg, string filename)
+{
+    fstream temporal_msg_file;
+    temporal_msg_file.open(filename, fstream::out | fstream::app);
+
+    if (!temporal_msg_file.is_open()) //Check if file was created
+    {
+        printf("Unable to open the file '%s'\n", filename.c_str());
+        exit(-1);
+    }
+    cout << "Client disconnected, storing message..." << endl;
+    //Write image header
+
+    temporal_msg_file << msg.account_from << "\t" << msg.account_to << endl;
+    //fprintf (temporal_msg_file, "%s\t%s\n", msg.account_from, msg.account_to);
+    //fputs(strcat(msg.message,"\n"), temporal_msg_file);
+    temporal_msg_file << msg.message << endl;
+
+    temporal_msg_file.close();
+}
+
+int read_stored_message()
+{
+    message_t message;
+    string filename = "temporal_msg_file";
+    FILE * file = NULL;
+    file = fopen(filename.c_str(), "r");
+
+    while (fscanf(file, "%s\t%s\n", message.account_from, message.account_to) != EOF)
+    {
+        fgets(message.message, BUFFER_SIZE, file);
+        //printf("%s\t%s\n%s\n", message1, message2, message3);
+        if(strncmp(message.account_to, "asdf", BUFFER_SIZE) == 0) {
+            delete_msg_from_file(message);
+            return 1;
+            break;
+        }
+    }
+
+    fclose(file);
+    return 0;
+}
+
+void delete_msg_from_file(message_t msg_to_delete)
+{
+    string filename_temp = "temporal";
+    //write_store_message(msg_to_delete, filename_temp);
+    message_t message;
+    string filename = "temporal_msg_file";
+    FILE * file = NULL;
+    file = fopen(filename.c_str(), "r");
+
+    while (fscanf(file, "%s\t%s\n", message.account_from, message.account_to) != EOF)
+    {
+        fgets(message.message, BUFFER_SIZE, file);
+        cout << "Current message: " << message.account_from << message.account_to << message.message << endl;
+        cout << "Message to delete: " << msg_to_delete.account_from << msg_to_delete.account_to << msg_to_delete.message << endl;
+        if(strncmp(message.account_to, msg_to_delete.account_to, BUFFER_SIZE) == 0
+        && strncmp(message.account_from, msg_to_delete.account_from, BUFFER_SIZE) == 0
+        && strncmp(message.message, msg_to_delete.message, BUFFER_SIZE) == 0)
+        {
+            cout << "deleting record "<< endl;
+
+        } else{
+            write_store_message(message, filename_temp);
+        }
+    }
+    int result;
+    result = rename(filename_temp.c_str(), filename.c_str());
+
+    fclose(file);
 }

@@ -13,6 +13,8 @@
 #include <pthread.h>
 #include <string>
 #include <map>
+#include <fstream>
+#include <stdio.h>
 #include "sockets.h"
 #include "fatal_error.h"
 #define MAX_QUEUE 5
@@ -38,6 +40,11 @@ void waitForConnections(int server_fd);
 
 void* attentionThread(void* arg);
 
+void write_store_message(message_t msg, string filename);
+
+int read_stored_message();
+
+void delete_msg_from_file(message_t msg_to_delete);
 
 
 #endif //PROYECTOFINALPROGAV_CHAT_H
