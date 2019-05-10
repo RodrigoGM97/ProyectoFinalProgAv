@@ -1,80 +1,107 @@
 #include <ncurses.h>
 #include <iostream>
+#include <pthread.h>
 
 using namespace std;
 
-int main()
+class chatInterface
 {
-    //Initializing ncurses
-    initscr();
-
-    //Get screen size
-    int yMax, xMax;
-    getmaxyx(stdscr, yMax, xMax);
-
-    //Variables
-    int cursorStartY = yMax-7;
-    int cursorStartX = 8;
-
-    //Creating windows
-    WINDOW * messagesWin = newwin(yMax-9, xMax-12, 1, 6);
-    WINDOW * userInputWin = newwin(6, xMax-12, yMax-8, 6);
-    box(messagesWin, 0, 0);
-    box(userInputWin, 0, 0);
-
-    //Move cursor to start position
-    move(cursorStartY, cursorStartX);
-
-    //Refreshing on screen
-    refresh();
-    wrefresh(messagesWin);
-    wrefresh(userInputWin);
-
-    //Enable use of arrows
-    keypad(stdscr, true);
-
-    int inputChar, curY, curX;
-    char str[100];
-
-    getstr(str);
-
-    mvprintw(0,0,"%s", str);
-
-    /*while(1)
-    {
-        getyx(stdscr, curY, curX);
-
-        inputChar = getch();
-
-        switch (inputChar)
+    private:
+        WINDOW * messagesWin;
+        WINDOW * userInputWin;
+        int yMax, xMax;//screen size
+        int cursorStartY, cursorStartX;
+        int curY, curX;
+        char curMessage[100];
+    public:
+        chatInterface()
         {
-            case KEY_LEFT:
-                move(curY, curX-1);
-                if(curX <= 6)
-                {
-                    move(curY, 9);
-                }
-                break;
-            case KEY_RIGHT:
-                move(curY, curX+1);
-                if(curX >= xMax-6)
-                {
-                    move(curY, xMax-9);
-                }
-                break;
-            case 10:
-                getstr(str);
-                break;
+            drawScreen();
         }
 
-        printw("%s", str);
+        bool listenToOptions()
+        {
+            int option;
+            bool exit = false;
+            keypad(stdscr, true);
 
-        refresh();
-        wrefresh(messagesWin);
-        wrefresh(userInputWin);
-    }*/     
+            while(1)
+            {
+                option = getch();
 
-    getch();
+                switch (option)
+                {
+                    case KEY_F(1):
+                        getMessage(curMessage);
+                        drawScreen();
+                        break;
+                    case KEY_F(2):
+                        exit = true;
+                        endwin();
+                        break;
+                }
+
+                if(exit)
+                    break;
+            }
+
+            return exit;
+        }
+
+        void getMessage(char * inputStr)
+        {
+            //Move cursor to start position
+            move(cursorStartY, cursorStartX);
+
+            echo();
+
+            getstr(inputStr);
+            clear();
+        }
+
+        void drawScreen()
+        {
+            //Get screen size
+            initscr();
+            noecho();
+            getmaxyx(stdscr, yMax, xMax);
+
+            cursorStartY = yMax-7;
+            cursorStartX = 8;
+
+            //Create windows
+            messagesWin = newwin(yMax-9, xMax-12, 1, 6);
+            userInputWin = newwin(6, xMax-12, yMax-8, 6);
+            box(messagesWin, 0, 0);
+            box(userInputWin, 0, 0);
+
+            //print options on top
+            mvprintw(0, 6, "F1=Type message\tF2=Exit");
+
+            //Refreshing on screen
+            refresh();
+            wrefresh(messagesWin);
+            wrefresh(userInputWin);
+        }
+};
+
+
+
+int main()
+{
+    chatInterface chat;
+    bool exitFlag = false;
+
+    while(1)
+    {
+        exitFlag = chat.listenToOptions();
+
+        if(exitFlag == true)
+        {
+            printf("exit: %d\n", exitFlag);
+            break;
+        }
+    }   
 
     endwin();
 
