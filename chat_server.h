@@ -19,7 +19,7 @@
 #include "fatal_error.h"
 
 #define MAX_QUEUE 5
-#define BUFFER_SIZE 100000
+#define BUFFER_SIZE 200
 using namespace std;
 
 // Data that will be sent to each structure

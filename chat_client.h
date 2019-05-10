@@ -18,7 +18,7 @@
 #include "sockets.h"
 #include "fatal_error.h"
 
-#define BUFFER_SIZE 100000
+#define BUFFER_SIZE 200
 
 using namespace std;
 
