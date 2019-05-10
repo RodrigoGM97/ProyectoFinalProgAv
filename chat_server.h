@@ -1,6 +1,13 @@
+//Advanced Programming Final Project
+//Chat
 //
-// Created by rodrigo on 2/05/19.
+//10-05-19
 //
+//Rodrigo Garcia
+//A01024595
+//
+//Saul Labra
+//A01020725
 
 #ifndef PROYECTOFINALPROGAV_CHAT_H
 #define PROYECTOFINALPROGAV_CHAT_H
@@ -17,6 +24,7 @@
 #include <stdio.h>
 #include "sockets.h"
 #include "fatal_error.h"
+#include "encryption.h"
 
 #define MAX_QUEUE 5
 #define BUFFER_SIZE 9999

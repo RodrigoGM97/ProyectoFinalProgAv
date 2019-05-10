@@ -1,17 +1,25 @@
+//Advanced Programming Final Project
+//Chat
 //
-// Created by rodrigo on 2/05/19.
+//10-05-19
 //
+//Rodrigo Garcia
+//A01024595
+//
+//Saul Labra
+//A01020725
 
 #include "chat_server.h"
 
-
+//Check if program still running
 int interrupt_exit = 0;
+//Map with connected users and its connectionfd
 map<string, int>connected_users;
 
 int main() {
     printLocalIPs();
+    //Initiate chat server
     int server = initServer(const_cast<char *>("8989"), MAX_QUEUE);
-    //std::cout << server << std::endl;
     waitForConnections(server);
     return 0;
 }
@@ -23,9 +31,10 @@ void waitForConnections(int server_fd)
     char client_presentation[INET_ADDRSTRLEN];
     int client_fd;
     pthread_t new_tid;
+    //Data that will be passed to the thread that will listen to the client
     thread_data_t * connection_data = NULL;
     int poll_response;
-    int timeout = 500;		// Time in milliseconds (0.5 seconds)
+    int timeout = 500;  // Time in milliseconds (0.5 seconds)
 
     // Get the size of the structure to store client information
     client_address_size = sizeof client_address;
@@ -53,7 +62,7 @@ void waitForConnections(int server_fd)
             if (interrupt_exit)
                 break;
         }
-        //Continue bank operations
+        //Check for incoming clients
         if (poll_response > 0)
         {
             if (test_fds[0].revents & POLLIN)
@@ -61,7 +70,7 @@ void waitForConnections(int server_fd)
                 // ACCEPT
                 // Wait for a client connection
                 client_fd = accept(server_fd, (struct sockaddr *)&client_address, &client_address_size);
-                cout << "Client fd: " << client_fd << endl;
+                //cout << "Client fd: " << client_fd << endl;
                 if (client_fd == -1)
                 {
                     fatalError("ERROR: accept");
@@ -70,6 +79,7 @@ void waitForConnections(int server_fd)
                 // Get the data from the client
                 inet_ntop(client_address.sin_family, &client_address.sin_addr, client_presentation, sizeof client_presentation);
                 printf("Received incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
+                //Save the connection data to the thread struct
                 connection_data = new thread_data_t;
                 connection_data->connection_fd = client_fd;
 
@@ -84,29 +94,42 @@ void waitForConnections(int server_fd)
 void* attentionThread(void* arg)
 {
     int poll_response;
-    int timeout = 500;
+    int timeout = 500;  // Time in milliseconds (0.5 seconds)
+    //Retrieve thread data struct
     auto * data = (thread_data_t*)arg;
     char buffer[BUFFER_SIZE];
+    //Receive mail from user
     recvString(data->connection_fd, buffer, BUFFER_SIZE);
+    cout << "Recibo arriba"<< endl;
     data->client_id = buffer;
+    cout << data->client_id << endl;
+    //Insert the user to the connected user list
     connected_users.insert(pair<string, int>(buffer, data->connection_fd));
+    //Check if the user received a message while he was offline
     pair<message_t, int> now_connected_data;
     now_connected_data = read_stored_message(buffer);
-    //cout << now_connected_data.second << endl;
     while (now_connected_data.second == 1)
     {
         cout << "User has now logged in, sending message" << endl;
-        //cout << now_connected_data.first.message << endl;
+        //Send the message to the user
+        int ciphertext_len;
+        unsigned char ciphertext[BUFFER_SIZE];
+
+        /* Buffer for the decrypted text */
+        unsigned char plaintext[BUFFER_SIZE];
+
+        memcpy((char*)plaintext,now_connected_data.first.message,BUFFER_SIZE);
+        ciphertext_len = encrypt_msg(plaintext, strlen((char*)plaintext), ciphertext);
+        memcpy(now_connected_data.first.message, (char*)ciphertext, BUFFER_SIZE);
+        now_connected_data.first.message_len = ciphertext_len;
         sendString(connected_users.find(now_connected_data.first.account_to)->second, &now_connected_data.first,sizeof(message_t));
         now_connected_data = read_stored_message(buffer);
     }
-    /*if (now_connected_data.second == 1)
-    {
-        cout << "User has now logged in, sending message" << endl;
-        cout << now_connected_data.first.message << endl;
-    }*/
+
+    //Struct to store the incoming messages
     message_t msg;
 
+    //While server still running
     while (!interrupt_exit)
     {
         // Create a structure array to hold the file descriptors to poll
@@ -123,24 +146,31 @@ void* attentionThread(void* arg)
                 break;
             }
         }
-        /*else if (poll_response == 0)
-        {
-            cout << "." << endl;
-        }*/
-        // Receive the request
+        // Receive message from client
         else if (poll_response > 0)
         {
+            //Check if client is still online
             if (recvString(data->connection_fd, &msg, sizeof(message_t)) == 0)
             {
                 cout << "Client disconnected" << endl;
+                //If client no longer online, remove him from the connected users list
                 connected_users.erase(data->client_id);
                 break;
             }
-
+            //If user is online send him the incoming message
             if (connected_users.find(msg.account_to)->second != 0)
                 sendString(connected_users.find(msg.account_to)->second, &msg,sizeof(message_t));
+            //If user is not online store his message in the temporal messages
             else if (connected_users.find(msg.account_to)->second == 0)
             {
+                unsigned char ciphertext[BUFFER_SIZE];
+                unsigned char decryptedtext[BUFFER_SIZE];
+                int decrypted_len;
+
+                memcpy((char*)ciphertext,msg.message,BUFFER_SIZE);
+                decrypted_len = decrypt_msg(ciphertext, msg.message_len, decryptedtext);
+                decryptedtext[decrypted_len] = '\0';
+                memcpy(msg.message, (char*)decryptedtext,BUFFER_SIZE);
                 write_store_message(msg, "temporal_msg_file");
             }
 
@@ -149,6 +179,7 @@ void* attentionThread(void* arg)
     pthread_exit(NULL);
 }
 
+//This function writes the messages that are destined to user that are currently offline to a file
 void write_store_message(message_t msg, string filename)
 {
     fstream temporal_msg_file;
@@ -160,16 +191,15 @@ void write_store_message(message_t msg, string filename)
         exit(-1);
     }
     cout << "Client disconnected, storing message..." << endl;
-    //Write image header
-
+    //File format
     temporal_msg_file << msg.account_from << "\t" << msg.account_to << "\t" << msg.message_len << endl;
-    //fprintf (temporal_msg_file, "%s\t%s\n", msg.account_from, msg.account_to);
-    //fputs(strcat(msg.message,"\n"), temporal_msg_file);
     temporal_msg_file << msg.message << endl;
 
     temporal_msg_file.close();
 }
 
+//Read the user messages from the offline-user messages file and returns the message
+//Returns a null message and a 0 if no message was found for the client
 pair<message_t, int> read_stored_message(char connected_client[])
 {
     message_t message;
@@ -178,20 +208,23 @@ pair<message_t, int> read_stored_message(char connected_client[])
     file = fopen(filename.c_str(), "r");
     pair<message_t, int> return_val;
 
+    //Search all the file
     while (fscanf(file, "%s\t%s\t%d\n", message.account_from, message.account_to, &message.message_len) != EOF)
     {
+        //Get the message
         fgets(message.message, BUFFER_SIZE, file);
-        //printf("%s\t%s\n%s\n", message1, message2, message3);
-
-
+        //cout << message.account_from << endl;
+        //Check if that message was intended for the user
         if(strncmp(message.account_to, connected_client, BUFFER_SIZE) == 0) {
+            //If a message is found for the user send it and eliminate it from file
             delete_msg_from_file(message);
             return_val.first = message;
             return_val.second = 1;
+            fclose(file);
             return return_val;
-            break;
         }
     }
+    //No message was found for the user
     return_val.first = message;
     return_val.second = 0;
     fclose(file);

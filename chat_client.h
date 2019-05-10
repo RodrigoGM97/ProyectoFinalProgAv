@@ -1,6 +1,13 @@
+//Advanced Programming Final Project
+//Chat
 //
-// Created by rodrigo on 4/05/19.
+//10-05-19
 //
+//Rodrigo Garcia
+//A01024595
+//
+//Saul Labra
+//A01020725
 
 #ifndef PROYECTOFINALPROGAV_CHAT_CLIENT_H
 #define PROYECTOFINALPROGAV_CHAT_CLIENT_H
@@ -20,6 +27,7 @@
 // Custom libraries
 #include "sockets.h"
 #include "fatal_error.h"
+#include "encryption.h"
 
 #define BUFFER_SIZE 9999
 
@@ -41,9 +49,5 @@ typedef struct data_struct {
 } thread_data_t;
 
 void* client_write(void* arg);
-
-int encrypt_msg(unsigned char *plaintext, int plaintext_len, unsigned char *ciphertext);
-
-int decrypt_msg(unsigned char *ciphertext, int ciphertext_len, unsigned char *plaintext);
 
 #endif //PROYECTOFINALPROGAV_CHAT_CLIENT_H
