@@ -141,7 +141,6 @@ void* attentionThread(void* arg)
                 sendString(connected_users.find(msg.account_to)->second, &msg,sizeof(message_t));
             else if (connected_users.find(msg.account_to)->second == 0)
             {
-                cout << "menaj" << msg.account_to << endl;
                 write_store_message(msg, "temporal_msg_file");
             }
 
@@ -163,7 +162,7 @@ void write_store_message(message_t msg, string filename)
     cout << "Client disconnected, storing message..." << endl;
     //Write image header
 
-    temporal_msg_file << msg.account_from << "\t" << msg.account_to << endl;
+    temporal_msg_file << msg.account_from << "\t" << msg.account_to << "\t" << msg.message_len << endl;
     //fprintf (temporal_msg_file, "%s\t%s\n", msg.account_from, msg.account_to);
     //fputs(strcat(msg.message,"\n"), temporal_msg_file);
     temporal_msg_file << msg.message << endl;
@@ -179,7 +178,7 @@ pair<message_t, int> read_stored_message(char connected_client[])
     file = fopen(filename.c_str(), "r");
     pair<message_t, int> return_val;
 
-    while (fscanf(file, "%s\t%s\n", message.account_from, message.account_to) != EOF)
+    while (fscanf(file, "%s\t%s\t%d\n", message.account_from, message.account_to, &message.message_len) != EOF)
     {
         fgets(message.message, BUFFER_SIZE, file);
         //printf("%s\t%s\n%s\n", message1, message2, message3);
@@ -208,7 +207,7 @@ void delete_msg_from_file(message_t msg_to_delete)
     FILE * file = NULL;
     file = fopen(filename.c_str(), "r");
 
-    while (fscanf(file, "%s\t%s\n", message.account_from, message.account_to) != EOF)
+    while (fscanf(file, "%s\t%s\t%d\n", message.account_from, message.account_to, &message.message_len) != EOF)
     {
         fgets(message.message, BUFFER_SIZE, file);
         //cout << "Current message: " << message.account_from << message.account_to << message.message << endl;

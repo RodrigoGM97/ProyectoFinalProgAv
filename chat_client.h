@@ -13,12 +13,15 @@
 #include <poll.h>
 #include <string>
 #include <pthread.h>
-#include <openssl/aes.h>
+#include <string.h>
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
 // Custom libraries
 #include "sockets.h"
 #include "fatal_error.h"
 
-#define BUFFER_SIZE 200
+#define BUFFER_SIZE 9999
 
 using namespace std;
 
@@ -26,6 +29,7 @@ typedef struct message_struct {
     char account_from[BUFFER_SIZE];
     char account_to[BUFFER_SIZE];
     char message[BUFFER_SIZE];
+    int message_len;
 } message_t;
 
 // Data that will be sent to each structure
@@ -38,8 +42,8 @@ typedef struct data_struct {
 
 void* client_write(void* arg);
 
-message_t encrypt_msg(message_t msg);
+int encrypt_msg(unsigned char *plaintext, int plaintext_len, unsigned char *ciphertext);
 
-message_t decrypt_msg(message_t msg);
+int decrypt_msg(unsigned char *ciphertext, int ciphertext_len, unsigned char *plaintext);
 
 #endif //PROYECTOFINALPROGAV_CHAT_CLIENT_H

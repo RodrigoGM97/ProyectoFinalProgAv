@@ -55,9 +55,15 @@ int main(int argc, char * argv[])
                 cout << "Server unavailable" << endl;
                 break;
             }
-            income_msg = decrypt_msg(income_msg);
+            unsigned char ciphertext[BUFFER_SIZE];
+            unsigned char decryptedtext[BUFFER_SIZE];
+            int decrypted_len;
+            memcpy((char*)ciphertext,income_msg.message,BUFFER_SIZE);
+            decrypted_len = decrypt_msg(ciphertext, income_msg.message_len, decryptedtext);
+            decryptedtext[decrypted_len] = '\0';
+            //income_msg = decrypt_msg(income_msg);
             cout << "Message from: " << income_msg.account_from << endl;
-            cout << "Message: " << income_msg.message << endl;
+            cout << "Message: " << (char*) decryptedtext << endl;
 
         }
     }
@@ -86,8 +92,16 @@ void* client_write(void* arg)
 
         strcpy(msg.account_to, msg_dest);
         strcpy(msg.message, new_msg);
+        int ciphertext_len;
+        unsigned char ciphertext[BUFFER_SIZE];
 
-        msg = encrypt_msg(msg);
+        /* Buffer for the decrypted text */
+        unsigned char plaintext[BUFFER_SIZE];
+
+        memcpy((char*)plaintext,msg.message,BUFFER_SIZE);
+        ciphertext_len = encrypt_msg(plaintext, strlen((char*)plaintext), ciphertext);
+        memcpy(msg.message, (char*)ciphertext, BUFFER_SIZE);
+        msg.message_len = ciphertext_len;
 
         sendString(data->connection_fd, &msg, sizeof(message_t));
     }
@@ -95,36 +109,102 @@ void* client_write(void* arg)
     pthread_exit(NULL);
 }
 
-message_t encrypt_msg(message_t msg)
+int encrypt_msg(unsigned char *plaintext, int plaintext_len, unsigned char *ciphertext)
 {
-    unsigned char inbuffer[BUFFER_SIZE];
-    unsigned char encryptedbuffer[BUFFER_SIZE];
-    unsigned char oneKey[] = "1234567890123456";
-    AES_KEY key;
+    EVP_CIPHER_CTX *ctx;
 
-    AES_set_encrypt_key(oneKey,128,&key);
+    /* A 256 bit key */
+    unsigned char *key = (unsigned char *)"01234567890123456789012345678901";
 
-    memcpy((char*)inbuffer,msg.message,BUFFER_SIZE);
-    AES_encrypt(inbuffer, encryptedbuffer,&key);
-    memcpy(msg.message, (char*) encryptedbuffer, BUFFER_SIZE);
+    /* A 128 bit IV */
+    unsigned char *iv = (unsigned char *)"0123456789012345";
 
-    cout << msg.message << endl;
+    int len;
 
-    return msg;
+    int ciphertext_len;
+
+    /* Create and initialise the context */
+    if(!(ctx = EVP_CIPHER_CTX_new()))
+        fatalError("Encrypt_error");
+
+    /*
+     * Initialise the encryption operation. IMPORTANT - ensure you use a key
+     * and IV size appropriate for your cipher
+     * In this example we are using 256 bit AES (i.e. a 256 bit key). The
+     * IV size for *most* modes is the same as the block size. For AES this
+     * is 128 bits
+     */
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+        fatalError("Encrypt_error");
+
+    /*
+     * Provide the message to be encrypted, and obtain the encrypted output.
+     * EVP_EncryptUpdate can be called multiple times if necessary
+     */
+    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
+        fatalError("Encrypt_error");
+    ciphertext_len = len;
+
+    /*
+     * Finalise the encryption. Further ciphertext bytes may be written at
+     * this stage.
+     */
+    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+        fatalError("Encrypt_error");
+    ciphertext_len += len;
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    return ciphertext_len;
 }
 
-message_t decrypt_msg(message_t msg)
+int decrypt_msg(unsigned char *ciphertext, int ciphertext_len, unsigned char *plaintext)
 {
-    unsigned char encryptedbuffer[BUFFER_SIZE];
-    unsigned char outbuffer[BUFFER_SIZE];
-    unsigned char oneKey[] = "1234567890123456";
-    AES_KEY key;
+    /* A 256 bit key */
+    unsigned char *key = (unsigned char *)"01234567890123456789012345678901";
 
-    AES_set_decrypt_key(oneKey,128,&key);
+    /* A 128 bit IV */
+    unsigned char *iv = (unsigned char *)"0123456789012345";
 
-    memcpy((char*)encryptedbuffer,msg.message,BUFFER_SIZE);
-    AES_decrypt(encryptedbuffer, outbuffer,&key);
-    memcpy(msg.message, (char*) outbuffer, BUFFER_SIZE);
+    EVP_CIPHER_CTX *ctx;
 
-    return msg;
+    int len;
+
+    int plaintext_len;
+
+    /* Create and initialise the context */
+    if(!(ctx = EVP_CIPHER_CTX_new()))
+        fatalError("Decrypt_error1");
+
+    /*
+     * Initialise the decryption operation. IMPORTANT - ensure you use a key
+     * and IV size appropriate for your cipher
+     * In this example we are using 256 bit AES (i.e. a 256 bit key). The
+     * IV size for *most* modes is the same as the block size. For AES this
+     * is 128 bits
+     */
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+        fatalError("Decrypt_error2");
+
+    /*
+     * Provide the message to be decrypted, and obtain the plaintext output.
+     * EVP_DecryptUpdate can be called multiple times if necessary.
+     */
+    if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
+        fatalError("Decrypt_error3");
+    plaintext_len = len;
+
+    /*
+     * Finalise the decryption. Further plaintext bytes may be written at
+     * this stage.
+     */
+    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len))
+        fatalError("Decrypt_error4");
+    plaintext_len += len;
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    return plaintext_len;
 }
