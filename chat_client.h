@@ -12,9 +12,8 @@
 #ifndef PROYECTOFINALPROGAV_CHAT_CLIENT_H
 #define PROYECTOFINALPROGAV_CHAT_CLIENT_H
 
-
+//Standard libraries
 #include <iostream>
-// Sockets libraries
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <poll.h>
@@ -33,6 +32,7 @@
 
 using namespace std;
 
+//Struct for message
 typedef struct message_struct {
     char account_from[BUFFER_SIZE];
     char account_to[BUFFER_SIZE];
@@ -48,6 +48,7 @@ typedef struct data_struct {
 
 } thread_data_t;
 
+//Thread to handle user input
 void* client_write(void* arg);
 
 #endif //PROYECTOFINALPROGAV_CHAT_CLIENT_H

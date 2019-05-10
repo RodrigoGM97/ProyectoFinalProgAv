@@ -100,7 +100,6 @@ void* attentionThread(void* arg)
     char buffer[BUFFER_SIZE];
     //Receive mail from user
     recvString(data->connection_fd, buffer, BUFFER_SIZE);
-    cout << "Recibo arriba"<< endl;
     data->client_id = buffer;
     cout << data->client_id << endl;
     //Insert the user to the connected user list
@@ -163,6 +162,7 @@ void* attentionThread(void* arg)
             //If user is not online store his message in the temporal messages
             else if (connected_users.find(msg.account_to)->second == 0)
             {
+                //Decrypt message
                 unsigned char ciphertext[BUFFER_SIZE];
                 unsigned char decryptedtext[BUFFER_SIZE];
                 int decrypted_len;
@@ -213,7 +213,6 @@ pair<message_t, int> read_stored_message(char connected_client[])
     {
         //Get the message
         fgets(message.message, BUFFER_SIZE, file);
-        //cout << message.account_from << endl;
         //Check if that message was intended for the user
         if(strncmp(message.account_to, connected_client, BUFFER_SIZE) == 0) {
             //If a message is found for the user send it and eliminate it from file
@@ -231,31 +230,32 @@ pair<message_t, int> read_stored_message(char connected_client[])
     return return_val;
 }
 
+//Function to delete a message once it it sent to the user
 void delete_msg_from_file(message_t msg_to_delete)
 {
+    //Create a temporal file to copy all data
     string filename_temp = "temporal";
     //write_store_message(msg_to_delete, filename_temp);
     message_t message;
     string filename = "temporal_msg_file";
     FILE * file = NULL;
     file = fopen(filename.c_str(), "r");
-
+    //Scan all the file
     while (fscanf(file, "%s\t%s\t%d\n", message.account_from, message.account_to, &message.message_len) != EOF)
     {
         fgets(message.message, BUFFER_SIZE, file);
-        //cout << "Current message: " << message.account_from << message.account_to << message.message << endl;
-        //cout << "Message to delete: " << msg_to_delete.account_from << msg_to_delete.account_to << msg_to_delete.message << endl;
+        //If the program finds the message to delete
         if(strncmp(message.account_to, msg_to_delete.account_to, BUFFER_SIZE) == 0
         && strncmp(message.account_from, msg_to_delete.account_from, BUFFER_SIZE) == 0
         && strncmp(message.message, msg_to_delete.message, BUFFER_SIZE) == 0)
         {
-            cout << "deleting record "<< endl;
+            cout << "deleting record... "<< endl;
 
         } else{
-            write_store_message(message, filename_temp);
+            write_store_message(message, filename_temp); //Write the remaining to the file
         }
     }
-    rename(filename_temp.c_str(), filename.c_str());
+    rename(filename_temp.c_str(), filename.c_str()); //Rename file to original one
 
     fclose(file);
 }

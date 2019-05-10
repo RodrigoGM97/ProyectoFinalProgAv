@@ -1,6 +1,15 @@
+//Advanced Programming Final Project
+//Chat
 //
-// Created by rodrigo on 10/05/19.
+//10-05-19
 //
+//Rodrigo Garcia
+//A01024595
+//
+//Saul Labra
+//A01020725
+
+//Credits: https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
 
 #include "encryption.h"
 

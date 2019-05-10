@@ -1,3 +1,14 @@
+//Advanced Programming Final Project
+//Chat
+//
+//10-05-19
+//
+//Rodrigo Garcia
+//A01024595
+//
+//Saul Labra
+//A01020725
+
 /*
     Helper methods to use with sockets
     The basic functions that should be done on any client / server program
