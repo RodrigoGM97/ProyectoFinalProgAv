@@ -4,6 +4,7 @@
 
 #include "chat_client.h"
 
+
 int interrupt_exit = 0;
 
 int main(int argc, char * argv[])
@@ -46,18 +47,6 @@ int main(int argc, char * argv[])
                 break;
             }
         }
-        if (poll_response==0)
-        {
-            /*strcpy(msg.account_to, "Juan");
-            strcpy(msg.message, "Hola");
-            int send_m = 0;
-
-            sendString(connection_fd, &msg, sizeof(message_t));*/
-            /*sprintf(buffer, "%s", msg.account_to.c_str());
-            sendString(connection_fd, buffer, BUFFER_SIZE);*/
-
-            //cout << "Message sent" << endl;
-        }
         // Receive the request
         else if (poll_response > 0)
         {
@@ -66,6 +55,7 @@ int main(int argc, char * argv[])
                 cout << "Server unavailable" << endl;
                 break;
             }
+            income_msg = decrypt_msg(income_msg);
             cout << "Message from: " << income_msg.account_from << endl;
             cout << "Message: " << income_msg.message << endl;
 
@@ -96,11 +86,45 @@ void* client_write(void* arg)
 
         strcpy(msg.account_to, msg_dest);
         strcpy(msg.message, new_msg);
-        /*cout << "Len: " << sizeof(new_msg) << endl;
-        cout << "MSG: " << new_msg<< endl;
-        cout << "Stored: " << msg.message << endl;*/
+
+        msg = encrypt_msg(msg);
+
         sendString(data->connection_fd, &msg, sizeof(message_t));
     }
 
     pthread_exit(NULL);
+}
+
+message_t encrypt_msg(message_t msg)
+{
+    unsigned char inbuffer[BUFFER_SIZE];
+    unsigned char encryptedbuffer[BUFFER_SIZE];
+    unsigned char oneKey[] = "1234567890123456";
+    AES_KEY key;
+
+    AES_set_encrypt_key(oneKey,128,&key);
+
+    memcpy((char*)inbuffer,msg.message,BUFFER_SIZE);
+    AES_encrypt(inbuffer, encryptedbuffer,&key);
+    memcpy(msg.message, (char*) encryptedbuffer, BUFFER_SIZE);
+
+    cout << msg.message << endl;
+
+    return msg;
+}
+
+message_t decrypt_msg(message_t msg)
+{
+    unsigned char encryptedbuffer[BUFFER_SIZE];
+    unsigned char outbuffer[BUFFER_SIZE];
+    unsigned char oneKey[] = "1234567890123456";
+    AES_KEY key;
+
+    AES_set_decrypt_key(oneKey,128,&key);
+
+    memcpy((char*)encryptedbuffer,msg.message,BUFFER_SIZE);
+    AES_decrypt(encryptedbuffer, outbuffer,&key);
+    memcpy(msg.message, (char*) outbuffer, BUFFER_SIZE);
+
+    return msg;
 }

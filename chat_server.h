@@ -17,8 +17,9 @@
 #include <stdio.h>
 #include "sockets.h"
 #include "fatal_error.h"
+
 #define MAX_QUEUE 5
-#define BUFFER_SIZE 200
+#define BUFFER_SIZE 100000
 using namespace std;
 
 // Data that will be sent to each structure
@@ -33,7 +34,6 @@ typedef struct message_struct {
     char account_from[BUFFER_SIZE];
     char account_to[BUFFER_SIZE];
     char message[BUFFER_SIZE];
-
 } message_t;
 
 void waitForConnections(int server_fd);

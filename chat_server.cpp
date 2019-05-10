@@ -61,6 +61,7 @@ void waitForConnections(int server_fd)
                 // ACCEPT
                 // Wait for a client connection
                 client_fd = accept(server_fd, (struct sockaddr *)&client_address, &client_address_size);
+                cout << "Client fd: " << client_fd << endl;
                 if (client_fd == -1)
                 {
                     fatalError("ERROR: accept");
@@ -91,11 +92,11 @@ void* attentionThread(void* arg)
     connected_users.insert(pair<string, int>(buffer, data->connection_fd));
     pair<message_t, int> now_connected_data;
     now_connected_data = read_stored_message(buffer);
-    cout << now_connected_data.second << endl;
+    //cout << now_connected_data.second << endl;
     while (now_connected_data.second == 1)
     {
         cout << "User has now logged in, sending message" << endl;
-        cout << now_connected_data.first.message << endl;
+        //cout << now_connected_data.first.message << endl;
         sendString(connected_users.find(now_connected_data.first.account_to)->second, &now_connected_data.first,sizeof(message_t));
         now_connected_data = read_stored_message(buffer);
     }
@@ -136,19 +137,11 @@ void* attentionThread(void* arg)
                 break;
             }
 
-            /*cout << "Account from: "<< msg.account_from << endl;
-            cout << "Account to: "<< msg.account_to << endl;
-            cout << "Mensaje: "<< msg.message << endl;*/
-
-            /*map<string, int>::iterator it;
-            for (it = connected_users.begin(); it != connected_users.end(); it++)
-            {
-                std::cout << it->first << ' ' << it->second << '\n';
-            }*/
             if (connected_users.find(msg.account_to)->second != 0)
                 sendString(connected_users.find(msg.account_to)->second, &msg,sizeof(message_t));
             else if (connected_users.find(msg.account_to)->second == 0)
             {
+                cout << "menaj" << msg.account_to << endl;
                 write_store_message(msg, "temporal_msg_file");
             }
 
@@ -218,8 +211,8 @@ void delete_msg_from_file(message_t msg_to_delete)
     while (fscanf(file, "%s\t%s\n", message.account_from, message.account_to) != EOF)
     {
         fgets(message.message, BUFFER_SIZE, file);
-        cout << "Current message: " << message.account_from << message.account_to << message.message << endl;
-        cout << "Message to delete: " << msg_to_delete.account_from << msg_to_delete.account_to << msg_to_delete.message << endl;
+        //cout << "Current message: " << message.account_from << message.account_to << message.message << endl;
+        //cout << "Message to delete: " << msg_to_delete.account_from << msg_to_delete.account_to << msg_to_delete.message << endl;
         if(strncmp(message.account_to, msg_to_delete.account_to, BUFFER_SIZE) == 0
         && strncmp(message.account_from, msg_to_delete.account_from, BUFFER_SIZE) == 0
         && strncmp(message.message, msg_to_delete.message, BUFFER_SIZE) == 0)
