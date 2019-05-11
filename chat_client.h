@@ -51,7 +51,7 @@ typedef struct data_struct {
     WINDOW * messagesWin;
     WINDOW * userInputWin;
     int yMax, xMax;//screen size
-    int cursorStartY, cursorStartX;
+    int inputCursorStartY, inputCursorStartX;
     int curY, curX;
     char curMessage[100];
     char curDestination[30];
@@ -61,6 +61,8 @@ typedef struct data_struct {
     bool exit;
 
 } thread_data_t;
+
+void drawScreen(thread_data_t * screenData);
 
 //Thread to handle user input
 void* client_write(void* arg);

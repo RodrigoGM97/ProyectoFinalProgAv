@@ -15,6 +15,7 @@ void drawScreen(thread_data_t * screenData);
 void * client_write(void* arg);
 void getDestination(char * destination, thread_data_t * screenData);
 void getMessage(char * message, thread_data_t * screenData);
+void askUserScreen(char * user);
 
 //Check if program still running
 int interrupt_exit = 0;
@@ -29,9 +30,9 @@ int main(int argc, char * argv[])
     int timeout = 500;
 
     connection_fd = connectSocket(argv[1], argv[2]); //Connecting to server
-    
-    cout << "Ingrese su correo" << endl;
-    cin >> num_cliente;
+
+    askUserScreen(num_cliente);
+
     strcpy(buffer, num_cliente);
     cout << buffer << " connected to server" << endl;
     sendString(connection_fd, buffer, BUFFER_SIZE); //Send user ID to server
@@ -48,7 +49,6 @@ int main(int argc, char * argv[])
     //configuring GUI
     drawScreen(connection_data);
     
-    //printf("Thread created\n");
     pthread_create(&new_tid, NULL, client_write, connection_data);
     //While program still running
     
@@ -110,8 +110,8 @@ void drawScreen(thread_data_t * screenData)
     noecho();
     getmaxyx(stdscr, screenData->yMax, screenData->xMax);
 
-    screenData->cursorStartY = screenData->yMax-7;
-    screenData->cursorStartX = 8;
+    screenData->inputCursorStartY = screenData->yMax-7;
+    screenData->inputCursorStartX = 8;
 
     //Create windows
     screenData->messagesWin = newwin(screenData->yMax-9, screenData->xMax-12, 1, 6);
@@ -201,13 +201,14 @@ void getDestination(char * destination, thread_data_t * screenData)
         wrefresh(screenData->userInputWin);
 
         //Move cursor to start position
-        wmove(screenData->userInputWin,screenData->cursorStartY, screenData->cursorStartX);
+        wmove(screenData->userInputWin, screenData->inputCursorStartY, screenData->inputCursorStartX);
+        //move(100,100);
         //wmove(screenData->userInputWin,0, 0);
         refresh();
         wrefresh(screenData->userInputWin);
 
         echo();
-
+        
         getstr(destination);
         wclear(screenData->userInputWin);
         box(screenData->userInputWin, 0, 0);
@@ -218,14 +219,13 @@ void getDestination(char * destination, thread_data_t * screenData)
 
 void getMessage(char * message, thread_data_t * screenData)
 {
-    //cout << "Entered getMessage" << endl;
-
     //pthread_mutex_lock(screenData->mutex);
         wprintw(screenData->userInputWin, "Enter message");
         wrefresh(screenData->userInputWin);
 
         //Move cursor to start position
-        wmove(screenData->userInputWin, screenData->cursorStartY, screenData->cursorStartX);
+        wmove(screenData->userInputWin, screenData->inputCursorStartY, screenData->inputCursorStartX);
+        //move(100,100);
         //wmove(screenData->userInputWin, 0, 0);
         refresh();
         wrefresh(screenData->userInputWin);
@@ -237,4 +237,30 @@ void getMessage(char * message, thread_data_t * screenData)
         box(screenData->userInputWin, 0, 0);
         wrefresh(screenData->userInputWin);
     //pthread_mutex_unlock(screenData->mutex);
+}
+
+void askUserScreen(char * user)
+{
+    WINDOW * userEmailInput;
+    int yMax, xMax;
+    //Get screen size
+    initscr();
+    getmaxyx(stdscr, yMax, xMax);
+
+    //Create windows
+    userEmailInput = newwin(3, xMax/3, yMax/2, xMax/3);
+    box(userEmailInput, 0, 0);
+
+    //print Indication on top
+    mvprintw(yMax/2-1, xMax/3, "Enter username / email");
+
+    //move cursor to input field
+    move(yMax/2+1, xMax/3+2);
+
+    //Refreshing on screen
+    refresh();
+    wrefresh(userEmailInput);
+
+    getstr(user);
+    endwin();
 }
