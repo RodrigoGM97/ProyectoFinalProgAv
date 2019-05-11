@@ -1,4 +1,15 @@
-	# Simple example of a Makefile
+#Advanced Programming Final Project
+#Chat
+#
+#10-05-19
+#
+#Rodrigo Garcia
+#A01024595
+#
+#Saul Labra
+#A01020725
+
+# Simple example of a Makefile
 
 ### Variables for this project ###
 # These should be the only ones that need to be modified
