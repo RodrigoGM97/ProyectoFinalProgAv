@@ -92,10 +92,6 @@ int main(int argc, char * argv[])
             wprintw(connection_data->messagesWin, "Message: %s\n", (char*) decryptedtext);
 
             wrefresh(connection_data->messagesWin);
-
-            /*cout << "Message from: " << income_msg.account_from << endl;
-            cout << "Message: " << (char*) decryptedtext << endl;*/
-
         }
     }
     close(connection_fd);
@@ -105,6 +101,10 @@ int main(int argc, char * argv[])
 
 void drawScreen(thread_data_t * screenData)
 {
+    //Color
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLUE);
+
     //Get screen size
     initscr();
     noecho();
@@ -114,10 +114,12 @@ void drawScreen(thread_data_t * screenData)
     screenData->inputCursorStartX = 8;
 
     //Create windows
-    screenData->messagesWin = newwin(screenData->yMax-9, screenData->xMax-12, 1, 6);
-    screenData->userInputWin = newwin(6, screenData->xMax-12, screenData->yMax-8, 6);
-    box(screenData->messagesWin, 0, 0);
-    box(screenData->userInputWin, 0, 0);
+    screenData->messagesWin = newwin(screenData->yMax-10, screenData->xMax-12, 2, 6);
+    screenData->userInputWin = newwin(5, screenData->xMax-12, screenData->yMax-7, 6);
+
+    //Assign color
+    wbkgd(screenData->messagesWin, COLOR_PAIR(1));
+    wbkgd(screenData->userInputWin, COLOR_PAIR(1));
 
     //enable scrolling
     scrollok(screenData->messagesWin, true);
@@ -164,12 +166,6 @@ void* client_write(void* arg)
                 break;
         }
 
-        /*cout << "Enter destination: " << endl; //Addressee
-        cin.getline(msg_dest, sizeof(msg_dest));
-
-        cout << "Enter message: " << endl;
-        cin.getline(new_msg, sizeof(new_msg));*/
-
         strcpy(msg.account_to, msg_dest);
         strcpy(msg.message, new_msg);
         //Encrypt message
@@ -194,49 +190,36 @@ void* client_write(void* arg)
 
 void getDestination(char * destination, thread_data_t * screenData)
 {
-    //cout << "Entered getDestination" << endl;
+    wprintw(screenData->userInputWin, "Enter destination\n\n");
+    wrefresh(screenData->userInputWin);
 
-    //pthread_mutex_lock(screenData->mutex);
-        wprintw(screenData->userInputWin, "Enter destination");
-        wrefresh(screenData->userInputWin);
+    //Move cursor to start position
+    wrefresh(screenData->userInputWin);
 
-        //Move cursor to start position
-        wmove(screenData->userInputWin, screenData->inputCursorStartY, screenData->inputCursorStartX);
-        //move(100,100);
-        //wmove(screenData->userInputWin,0, 0);
-        refresh();
-        wrefresh(screenData->userInputWin);
-
-        echo();
-        
-        getstr(destination);
-        wclear(screenData->userInputWin);
-        box(screenData->userInputWin, 0, 0);
-        wrefresh(screenData->userInputWin);
-    //pthread_mutex_unlock(screenData->mutex);
-
+    echo();
+    
+    wmove(screenData->userInputWin, screenData->inputCursorStartY, screenData->inputCursorStartX);
+    refresh();
+    wgetstr(screenData->userInputWin, destination);
+    wclear(screenData->userInputWin);
+    wrefresh(screenData->userInputWin);
 }
 
 void getMessage(char * message, thread_data_t * screenData)
 {
-    //pthread_mutex_lock(screenData->mutex);
-        wprintw(screenData->userInputWin, "Enter message");
-        wrefresh(screenData->userInputWin);
+    wprintw(screenData->userInputWin, "Enter message\n\n");
+    wrefresh(screenData->userInputWin);
 
-        //Move cursor to start position
-        wmove(screenData->userInputWin, screenData->inputCursorStartY, screenData->inputCursorStartX);
-        //move(100,100);
-        //wmove(screenData->userInputWin, 0, 0);
-        refresh();
-        wrefresh(screenData->userInputWin);
+    //Move cursor to start position
+    wmove(screenData->userInputWin, screenData->inputCursorStartY, screenData->inputCursorStartX);
+    refresh();
+    wrefresh(screenData->userInputWin);
 
-        echo();
+    echo();
 
-        getstr(message);
-        wclear(screenData->userInputWin);
-        box(screenData->userInputWin, 0, 0);
-        wrefresh(screenData->userInputWin);
-    //pthread_mutex_unlock(screenData->mutex);
+    wgetstr(screenData->userInputWin, message);
+    wclear(screenData->userInputWin);
+    wrefresh(screenData->userInputWin);
 }
 
 void askUserScreen(char * user)
