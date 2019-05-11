@@ -25,7 +25,7 @@ int main(int argc, char * argv[])
     int connection_fd;
     int poll_response;
     char buffer[BUFFER_SIZE];
-    //Id del usuario
+    //user ID
     char num_cliente[BUFFER_SIZE];
     int timeout = 500;
 
@@ -188,6 +188,7 @@ void* client_write(void* arg)
     endwin();
 }
 
+//get destinatary username
 void getDestination(char * destination, thread_data_t * screenData)
 {
     wprintw(screenData->userInputWin, "Enter destination\n\n");
@@ -205,6 +206,7 @@ void getDestination(char * destination, thread_data_t * screenData)
     wrefresh(screenData->userInputWin);
 }
 
+//get message to send
 void getMessage(char * message, thread_data_t * screenData)
 {
     wprintw(screenData->userInputWin, "Enter message\n\n");
