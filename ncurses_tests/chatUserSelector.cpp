@@ -1,11 +1,11 @@
-#include "chatDestinatarySelector.h"
+#include "chatUserSelector.h"
 
-chatDestinatarySelector::chatDestinatarySelector()
+chatUserSelector::chatUserSelector()
 {
     drawScreen();
 }
 
-void chatDestinatarySelector::drawScreen()
+void chatUserSelector::drawScreen()
 {
     //Get screen size
     initscr();
@@ -26,7 +26,7 @@ void chatDestinatarySelector::drawScreen()
     wrefresh(userEmailInput);
 }
 
-void chatDestinatarySelector::getUser(char * user)
+void chatUserSelector::getUser(char * user)
 {
     getstr(user);
     endwin();

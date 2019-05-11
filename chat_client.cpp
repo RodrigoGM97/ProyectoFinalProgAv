@@ -11,6 +11,11 @@
 
 #include "chat_client.h"
 
+void drawScreen(thread_data_t * screenData);
+void * client_write(void* arg);
+void getDestination(char * destination, thread_data_t * screenData);
+void getMessage(char * message, thread_data_t * screenData);
+
 //Check if program still running
 int interrupt_exit = 0;
 
@@ -23,22 +28,30 @@ int main(int argc, char * argv[])
     char num_cliente[BUFFER_SIZE];
     int timeout = 500;
 
-    connection_fd = connectSocket(argv[1], argv[2]); //conectarse a servidor
+    connection_fd = connectSocket(argv[1], argv[2]); //Connecting to server
+    
     cout << "Ingrese su correo" << endl;
     cin >> num_cliente;
     strcpy(buffer, num_cliente);
     cout << buffer << " connected to server" << endl;
-    sendString(connection_fd, buffer, BUFFER_SIZE); //Enviar id del usuario al servidor
+    sendString(connection_fd, buffer, BUFFER_SIZE); //Send user ID to server
+    
     message_t income_msg;
-    //Datos que se almacenaran en el thread
+    
+    //Data that will be stored in thread
     pthread_t new_tid;
     thread_data_t * connection_data = NULL;
     connection_data = new thread_data_t;
     strcpy(connection_data->client_id, buffer);
     connection_data->connection_fd = connection_fd;
+
+    //configuring GUI
+    drawScreen(connection_data);
+    
     //printf("Thread created\n");
     pthread_create(&new_tid, NULL, client_write, connection_data);
     //While program still running
+    
     while (!interrupt_exit)
     {
         // Create a structure array to hold the file descriptors to poll
@@ -72,14 +85,50 @@ int main(int argc, char * argv[])
             decrypted_len = decrypt_msg(ciphertext, income_msg.message_len, decryptedtext);
             decryptedtext[decrypted_len] = '\0';
 
-            cout << "Message from: " << income_msg.account_from << endl;
-            cout << "Message: " << (char*) decryptedtext << endl;
+            //printing on GUI
+            getyx(connection_data->messagesWin, connection_data->curY, connection_data->curX);
+
+            wprintw(connection_data->messagesWin, "Message from: %s\n", income_msg.account_from);
+            wprintw(connection_data->messagesWin, "Message: %s\n", (char*) decryptedtext);
+
+            wrefresh(connection_data->messagesWin);
+
+            /*cout << "Message from: " << income_msg.account_from << endl;
+            cout << "Message: " << (char*) decryptedtext << endl;*/
 
         }
     }
     close(connection_fd);
 
     return 0;
+}
+
+void drawScreen(thread_data_t * screenData)
+{
+    //Get screen size
+    initscr();
+    noecho();
+    getmaxyx(stdscr, screenData->yMax, screenData->xMax);
+
+    screenData->cursorStartY = screenData->yMax-7;
+    screenData->cursorStartX = 8;
+
+    //Create windows
+    screenData->messagesWin = newwin(screenData->yMax-9, screenData->xMax-12, 1, 6);
+    screenData->userInputWin = newwin(6, screenData->xMax-12, screenData->yMax-8, 6);
+    box(screenData->messagesWin, 0, 0);
+    box(screenData->userInputWin, 0, 0);
+
+    //enable scrolling
+    scrollok(screenData->messagesWin, true);
+
+    //print options on top
+    mvprintw(0, 6, "F1=Type message\tF2=Exit");
+
+    //Refreshing on screen
+    refresh();
+    wrefresh(screenData->messagesWin);
+    wrefresh(screenData->userInputWin);
 }
 
 //Thread to manage input messages
@@ -93,14 +142,33 @@ void* client_write(void* arg)
     strcpy(msg.account_from, data->client_id);
     cin.ignore();
 
+    //run
+
+    int option;
+    keypad(stdscr, true);
+
     //While program still running
     while(!interrupt_exit)
     {
-        cout << "Enter destination: " << endl; //Addressee
+        option = getch();
+
+        switch (option)
+        {
+            case KEY_F(1):
+                getDestination(msg_dest, data);
+                getMessage(new_msg, data);
+                break;
+            case KEY_F(2):
+                interrupt_exit = true;
+                endwin();
+                break;
+        }
+
+        /*cout << "Enter destination: " << endl; //Addressee
         cin.getline(msg_dest, sizeof(msg_dest));
 
         cout << "Enter message: " << endl;
-        cin.getline(new_msg, sizeof(new_msg));
+        cin.getline(new_msg, sizeof(new_msg));*/
 
         strcpy(msg.account_to, msg_dest);
         strcpy(msg.message, new_msg);
@@ -120,4 +188,53 @@ void* client_write(void* arg)
     }
 
     pthread_exit(NULL);
+
+    endwin();
+}
+
+void getDestination(char * destination, thread_data_t * screenData)
+{
+    //cout << "Entered getDestination" << endl;
+
+    //pthread_mutex_lock(screenData->mutex);
+        wprintw(screenData->userInputWin, "Enter destination");
+        wrefresh(screenData->userInputWin);
+
+        //Move cursor to start position
+        wmove(screenData->userInputWin,screenData->cursorStartY, screenData->cursorStartX);
+        //wmove(screenData->userInputWin,0, 0);
+        refresh();
+        wrefresh(screenData->userInputWin);
+
+        echo();
+
+        getstr(destination);
+        wclear(screenData->userInputWin);
+        box(screenData->userInputWin, 0, 0);
+        wrefresh(screenData->userInputWin);
+    //pthread_mutex_unlock(screenData->mutex);
+
+}
+
+void getMessage(char * message, thread_data_t * screenData)
+{
+    //cout << "Entered getMessage" << endl;
+
+    //pthread_mutex_lock(screenData->mutex);
+        wprintw(screenData->userInputWin, "Enter message");
+        wrefresh(screenData->userInputWin);
+
+        //Move cursor to start position
+        wmove(screenData->userInputWin, screenData->cursorStartY, screenData->cursorStartX);
+        //wmove(screenData->userInputWin, 0, 0);
+        refresh();
+        wrefresh(screenData->userInputWin);
+
+        echo();
+
+        getstr(message);
+        wclear(screenData->userInputWin);
+        box(screenData->userInputWin, 0, 0);
+        wrefresh(screenData->userInputWin);
+    //pthread_mutex_unlock(screenData->mutex);
 }

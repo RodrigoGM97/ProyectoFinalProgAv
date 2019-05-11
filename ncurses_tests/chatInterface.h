@@ -1,5 +1,9 @@
 #include <ncurses.h>
 
+typedef struct status_s{
+
+}status_t;
+
 class chatInterface
 {
     private:
@@ -11,7 +15,9 @@ class chatInterface
         char curMessage[100];
     public:
         chatInterface();
-        bool listenToOptions();
-        void getMessage(char * inputStr);
+        bool listenToOptions(char * message, char * destination);
+        void getDestination(char * destination);
+        void getMessage(char * message);
         void drawScreen();
+        void printOnChat(char * input);
 };

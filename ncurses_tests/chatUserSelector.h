@@ -1,12 +1,12 @@
 #include <ncurses.h>
 
-class chatDestinatarySelector
+class chatUserSelector
 {
     private:
         int yMax, xMax;
         WINDOW * userEmailInput;
     public:
-        chatDestinatarySelector();
+        chatUserSelector();
         void drawScreen();
         void getUser(char * user);
 };

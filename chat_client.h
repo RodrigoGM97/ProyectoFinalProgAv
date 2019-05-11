@@ -27,6 +27,7 @@
 #include "sockets.h"
 #include "fatal_error.h"
 #include "encryption.h"
+#include <ncurses.h>
 
 #define BUFFER_SIZE 9999
 
@@ -45,6 +46,19 @@ typedef struct data_struct {
     // The file descriptor for the socket
     int connection_fd;
     char client_id[BUFFER_SIZE];
+
+    //gui information
+    WINDOW * messagesWin;
+    WINDOW * userInputWin;
+    int yMax, xMax;//screen size
+    int cursorStartY, cursorStartX;
+    int curY, curX;
+    char curMessage[100];
+    char curDestination[30];
+
+    pthread_mutex_t * mutex;
+
+    bool exit;
 
 } thread_data_t;
 

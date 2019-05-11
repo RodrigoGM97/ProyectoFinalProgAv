@@ -6,7 +6,7 @@ chatInterface::chatInterface()
     drawScreen();
 }
 
-bool chatInterface::listenToOptions()
+bool chatInterface::listenToOptions(char * message, char * destination)
 {
     int option;
     bool exit = false;
@@ -19,8 +19,8 @@ bool chatInterface::listenToOptions()
         switch (option)
         {
             case KEY_F(1):
-                getMessage(curMessage);
-                drawScreen();
+                getDestination(destination);
+                getMessage(message);
                 break;
             case KEY_F(2):
                 exit = true;
@@ -36,15 +36,36 @@ bool chatInterface::listenToOptions()
     return exit;
 }
 
-void chatInterface::getMessage(char * inputStr)
+void chatInterface::getDestination(char * destination)
 {
+    wprintw(userInputWin, "Enter destination");
+    wrefresh(userInputWin);
+
     //Move cursor to start position
     move(cursorStartY, cursorStartX);
 
     echo();
 
-    getstr(inputStr);
-    clear();
+    getstr(destination);
+    wclear(userInputWin);
+    box(userInputWin, 0, 0);
+    wrefresh(userInputWin);
+}
+
+void chatInterface::getMessage(char * message)
+{
+    wprintw(userInputWin, "Enter message");
+    wrefresh(userInputWin);
+
+    //Move cursor to start position
+    move(cursorStartY, cursorStartX);
+
+    echo();
+
+    getstr(message);
+    wclear(userInputWin);
+    box(userInputWin, 0, 0);
+    wrefresh(userInputWin);
 }
 
 void chatInterface::drawScreen()
@@ -63,6 +84,9 @@ void chatInterface::drawScreen()
     box(messagesWin, 0, 0);
     box(userInputWin, 0, 0);
 
+    //enable scrolling
+    scrollok(messagesWin, true);
+
     //print options on top
     mvprintw(0, 6, "F1=Type message\tF2=Exit");
 
@@ -70,4 +94,16 @@ void chatInterface::drawScreen()
     refresh();
     wrefresh(messagesWin);
     wrefresh(userInputWin);
+}
+
+void chatInterface::printOnChat(char * input)
+{
+    getyx(messagesWin, curY, curX);
+    move(curY, curX+2);
+
+    for(int i=0; i<100; i++)
+    {
+        wprintw(messagesWin, "%d Example line\n", i);
+        wrefresh(messagesWin);
+    }
 }
